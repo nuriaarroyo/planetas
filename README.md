@@ -22,7 +22,9 @@ para clustering conviene comenzar con subconjuntos numericos interpretables.
 - `src/eda_exodata.py`: genera el EDA reproducible en Plotly.
 - `src/feature_config.py`: define variables clave y grupos de features para clustering.
 - `src/impute_exodata.py`: genera matrices imputadas y auditorias para Mapper/TDA y ML.
+- `src/mapper_exodata.py`: construye grafos Mapper/TDA y compara su estructura topologica.
 - `src/imputation/steps/`: pasos auditables del pipeline de imputacion.
+- `src/mapper_tda/`: pipeline modular de preprocesamiento, lenses, clustering, metricas y reportes Mapper.
 - `notebooks/`: notebooks renderizables para revisar EDA y preparar clustering.
 - `reports/`: salidas generadas: HTML interactivo, tablas de nulos, rangos y correlaciones.
 - `data/`: espacio recomendado para organizar datos si despues se mueve el CSV.
@@ -53,8 +55,9 @@ Si tu instalacion de Conda pide aceptar terminos de los canales `defaults`,
 crea el mismo entorno solo con `conda-forge`:
 
 ```powershell
-conda create -y -n planetas --override-channels -c conda-forge python=3.12 pandas numpy plotly scikit-learn scipy nbformat nbconvert ipykernel jupyterlab pytest
+conda create -y -n planetas --override-channels -c conda-forge python=3.12 pandas numpy plotly scikit-learn scipy networkx nbformat nbconvert ipykernel jupyterlab pytest pip
 conda activate planetas
+python -m pip install "kmapper>=2.1"
 ```
 
 ```powershell
@@ -150,6 +153,102 @@ Para conclusiones topologicas, comparar siempre:
 3. median baseline,
 4. iterative sensitivity,
 5. bootstrap o variacion de parametros Mapper.
+
+## Mapper/TDA
+
+El pipeline Mapper construye grafos separados para tres espacios de variables:
+
+- `G_phys = Mapper(X_phys)` con `pl_rade`, `pl_bmasse`, `pl_dens`.
+- `G_orb = Mapper(X_orb)` con `pl_orbper`, `pl_orbsmax`, `pl_insol`, `pl_eqt`.
+- `G_joint = Mapper(X_joint)` con la union de ambos espacios.
+
+Un lens es una funcion `f: X -> R^k`. En este proyecto:
+
+- `pca2` es el lens principal: un solo lens vectorial 2D `f(x) = (PC1, PC2)`.
+- `density` es sensibilidad: `f(x) = (PC1, log(d_k + eps))` para rarezas, bordes y periferias.
+- `domain` es un lens interpretativo adicional, no el analisis principal.
+
+Los grafos principales son:
+
+- `G_phys_pca2`
+- `G_orb_pca2`
+- `G_joint_pca2`
+- `G_phys_density`
+- `G_orb_density`
+- `G_joint_density`
+
+PCA2 es el lens principal porque es comparable, reproducible y resume la
+variacion global. PCA1 + densidad local queda como analisis de sensibilidad.
+No mezclamos ambos lenses en un solo lens 3D/4D por default porque el cover
+crece demasiado rapido en dimension alta:
+
+- `10^2 = 100` celdas
+- `10^3 = 1000` celdas
+- `10^4 = 10000` celdas
+
+Eso puede fragmentar el grafo y volverlo inestable.
+
+Configuracion default:
+
+- `lens=pca2`
+- `n_cubes=10`
+- `overlap=0.35`
+- `clusterer=DBSCAN`
+- `min_samples=4`
+- `eps_percentile=90`
+
+El script acepta un CSV explicito con `--csv`. Si no se pasa, busca en este
+orden:
+
+1. `reports/imputation/mapper_features_imputed_knn.csv`
+2. `reports/imputation/mapper_features_complete_case.csv`
+3. el `data/PSCompPars_*.csv` mas reciente por nombre
+
+Comandos principales:
+
+```powershell
+python .\src\mapper_exodata.py --space phys --lens pca2
+python .\src\mapper_exodata.py --space orb --lens pca2
+python .\src\mapper_exodata.py --space joint --lens pca2
+python .\src\mapper_exodata.py --space all --lens all
+python .\src\mapper_exodata.py --space all --lens all --grid
+```
+
+Configuracion principal:
+
+```powershell
+python .\src\mapper_exodata.py --space all --lens pca2 --n-cubes 10 --overlap 0.35 --clusterer dbscan --min-samples 4 --eps-percentile 90
+```
+
+Sensibilidad con densidad:
+
+```powershell
+python .\src\mapper_exodata.py --space all --lens density --n-cubes 10 --overlap 0.35 --clusterer dbscan --min-samples 4 --eps-percentile 90
+```
+
+Modo completo con grilla:
+
+```powershell
+python .\src\mapper_exodata.py --space all --lens all --grid
+```
+
+El pipeline genera en `reports/mapper/`:
+
+- grafos JSON
+- HTML interactivos por grafo
+- tablas de nodos
+- tablas de aristas
+- metricas de grafos
+- distancias entre grafos
+- `mapper_report.html`
+
+Regla de interpretacion:
+
+- Los grafos `pca2` son el analisis principal.
+- Los grafos `density` son sensibilidad.
+- Las conclusiones fuertes requieren estabilidad entre lenses, cubiertas e imputaciones.
+- No hacer inferencias cientificas fuertes si una estructura aparece solo bajo una configuracion.
+- Las variables observacionales como `discoverymethod` sirven para auditoria y color, no como features principales del Mapper.
 
 ## Salida principal
 

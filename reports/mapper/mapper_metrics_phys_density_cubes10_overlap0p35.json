@@ -1,0 +1,17 @@
+{
+  "n_nodes": 74,
+  "n_edges": 109,
+  "beta_0": 18,
+  "beta_1": 53,
+  "graph_density": 0.04035542391706775,
+  "average_degree": 2.945945945945946,
+  "n_connected_components": 18,
+  "largest_component_n_nodes": 38,
+  "largest_component_n_edges": 81,
+  "diameter_largest_component": 7,
+  "average_shortest_path_largest_component": 3.1493598862019914,
+  "average_clustering": 0.4853866853866854,
+  "mean_node_size": 173.8108108108108,
+  "median_node_size": 18.0,
+  "max_node_size": 2411
+}
