@@ -1,0 +1,72 @@
+[
+  {
+    "feature": "pl_rade",
+    "observed_count": 6223,
+    "physically_derived_count": 0,
+    "imputed_count": 50,
+    "still_missing_count": 0,
+    "derived_density_count": 0,
+    "derived_kepler_count": 0,
+    "method": "iterative"
+  },
+  {
+    "feature": "pl_bmasse",
+    "observed_count": 6242,
+    "physically_derived_count": 0,
+    "imputed_count": 31,
+    "still_missing_count": 0,
+    "derived_density_count": 0,
+    "derived_kepler_count": 0,
+    "method": "iterative"
+  },
+  {
+    "feature": "pl_dens",
+    "observed_count": 0,
+    "physically_derived_count": 6199,
+    "imputed_count": 74,
+    "still_missing_count": 0,
+    "derived_density_count": 6199,
+    "derived_kepler_count": 0,
+    "method": "iterative"
+  },
+  {
+    "feature": "pl_orbper",
+    "observed_count": 5934,
+    "physically_derived_count": 0,
+    "imputed_count": 339,
+    "still_missing_count": 0,
+    "derived_density_count": 0,
+    "derived_kepler_count": 0,
+    "method": "iterative"
+  },
+  {
+    "feature": "pl_orbsmax",
+    "observed_count": 5845,
+    "physically_derived_count": 420,
+    "imputed_count": 8,
+    "still_missing_count": 0,
+    "derived_density_count": 0,
+    "derived_kepler_count": 420,
+    "method": "iterative"
+  },
+  {
+    "feature": "pl_insol",
+    "observed_count": 4397,
+    "physically_derived_count": 0,
+    "imputed_count": 1876,
+    "still_missing_count": 0,
+    "derived_density_count": 0,
+    "derived_kepler_count": 0,
+    "method": "iterative"
+  },
+  {
+    "feature": "pl_eqt",
+    "observed_count": 4673,
+    "physically_derived_count": 0,
+    "imputed_count": 1600,
+    "still_missing_count": 0,
+    "derived_density_count": 0,
+    "derived_kepler_count": 0,
+    "method": "iterative"
+  }
+]

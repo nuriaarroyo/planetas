@@ -7,6 +7,7 @@ dependencies:
   - pandas>=2.2
   - numpy>=1.26
   - plotly>=5.20
+  - matplotlib>=3.8
   - scikit-learn>=1.4
   - scipy>=1.12
   - networkx>=3.2
@@ -15,6 +16,10 @@ dependencies:
   - ipykernel>=6.29
   - jupyterlab>=4.0
   - pytest>=8.0
+  - networkx>=3.2
+  - pip
+  - pip:
+      - kmapper>=2.1
   - pip>=24
   - pip:
       - kmapper>=2.1

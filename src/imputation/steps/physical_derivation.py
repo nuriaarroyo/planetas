@@ -63,7 +63,7 @@ def derive_planet_density(df: pd.DataFrame) -> tuple[pd.DataFrame, DensityDeriva
 
     observed_before = int(density.notna().sum())
     missing_before = int(density.isna().sum())
-    valid_physics = (mass > 0) & (radius > 0)
+    valid_physics = np.isfinite(mass) & np.isfinite(radius) & (mass > 0) & (radius > 0)
     derived_mask = density.isna() & valid_physics
     derived_values = EARTH_DENSITY_G_CM3 * mass / radius.pow(3)
     density = density.mask(derived_mask, derived_values)
@@ -110,7 +110,13 @@ def derive_semimajor_axis(df: pd.DataFrame) -> tuple[pd.DataFrame, KeplerDerivat
         period_days = pd.to_numeric(out["pl_orbper"], errors="coerce")
         stellar_mass = pd.to_numeric(out["st_mass"], errors="coerce")
         p_years = period_days / 365.25
-        valid = (semimajor.isna()) & (period_days > 0) & (stellar_mass > 0)
+        valid = (
+            semimajor.isna()
+            & np.isfinite(period_days)
+            & np.isfinite(stellar_mass)
+            & (period_days > 0)
+            & (stellar_mass > 0)
+        )
         derived_values = np.power(stellar_mass * p_years.pow(2), 1.0 / 3.0)
         semimajor = semimajor.mask(valid, derived_values)
     else:

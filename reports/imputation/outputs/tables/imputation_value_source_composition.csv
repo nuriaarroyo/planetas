@@ -1,0 +1,8 @@
+feature,observed_count,physically_derived_count,imputed_count,still_missing_count,derived_density_count,derived_kepler_count,method
+pl_rade,6223,0,50,0,0,0,iterative
+pl_bmasse,6242,0,31,0,0,0,iterative
+pl_dens,0,6199,74,0,6199,0,iterative
+pl_orbper,5934,0,339,0,0,0,iterative
+pl_orbsmax,5845,420,8,0,0,420,iterative
+pl_insol,4397,0,1876,0,0,0,iterative
+pl_eqt,4673,0,1600,0,0,0,iterative

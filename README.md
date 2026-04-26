@@ -74,18 +74,19 @@ python .\src\eda_exodata.py --csv .\data\PSCompPars_2026.04.25_17.36.36.csv --re
 
 ## Imputación de valores faltantes
 
-El pipeline de imputacion esta pensado para no inventar datos sin control. El
-default metodologico es:
+El pipeline de imputacion esta pensado para no inventar datos sin control. La
+familia de metodos evaluados sigue este flujo:
 
 ```text
 derivacion fisica -> log-transform -> RobustScaler -> KNNImputer -> inversion de escala -> auditoria
 ```
 
-`KNNImputer` es el metodo principal porque Mapper/TDA depende de vecindades
-locales: imputa usando planetas cercanos en el espacio de variables observadas.
-`median` queda como baseline robusto. `iterative` queda como sensibilidad
-avanzada, no como default, porque puede imponer relaciones globales y suavizar
-artificialmente la topologia.
+`KNNImputer` sigue siendo la referencia local natural para Mapper/TDA porque
+imputa usando planetas cercanos en el espacio de variables observadas. `median`
+queda como baseline robusto. En el reporte actual, `iterative` se visualiza como
+metodo principal porque obtuvo el menor rank promedio de error en la validacion
+enmascarada de este dataset. Esto no decide por si solo la topologia: Mapper
+debe compararse contra casos completos y metodos alternativos.
 
 Antes de imputar se preservan observaciones y se derivan solo propiedades con
 formula fisica clara:
@@ -113,13 +114,13 @@ python .\src\impute_exodata.py --method compare
 El default equivale a:
 
 ```powershell
-python .\src\impute_exodata.py --method knn --n-neighbors 15 --weights distance
+python .\src\impute_exodata.py --method iterative --visualized-method iterative --n-neighbors 15 --weights distance
 ```
 
 Ejemplo completo:
 
 ```powershell
-python .\src\impute_exodata.py --csv .\data\PSCompPars_2026.04.25_17.36.36.csv --reports-dir .\reports\imputation --method knn --n-neighbors 15 --weights distance --max-missing-pct 60 --validation-mask-frac 0.15 --random-state 42
+python .\src\impute_exodata.py --csv .\data\PSCompPars_2026.04.25_17.36.36.csv --reports-dir .\reports\imputation --method compare --visualized-method iterative --n-neighbors 15 --weights distance --max-missing-pct 60 --validation-mask-frac 0.15 --random-state 42
 ```
 
 Flags opcionales:
@@ -127,6 +128,8 @@ Flags opcionales:
 - `--include-orbital-eccentricity`: agrega `pl_orbeccen`.
 - `--include-stellar-context`: agrega `st_teff`, `st_met`, `st_mass`, `st_rad`, `st_lum`, `sy_pnum`, `sy_snum`.
 - `--n-multiple-imputations`: genera varias salidas si `--method iterative`.
+- `--visualized-method`: selecciona el metodo que aparece como principal en el reporte; default `iterative`.
+- `--outputs-dir`: carpeta para PDFs y tablas exportadas; default `reports/imputation/outputs`.
 
 Salidas principales en `reports/imputation/`:
 
@@ -139,12 +142,17 @@ Salidas principales en `reports/imputation/`:
 - `imputed_values_long_<method>.csv`.
 - `method_comparison.csv`.
 - `imputation_report.html`.
+- `outputs/figures_pdf/*.pdf`: cada grafico individual listo para reporte.
+- `outputs/tables/*.csv` y `outputs/tables/*.json`: tablas principales de comparacion, validacion, fuentes, missingness y cobertura.
 
-Cada salida agrega indicadores `<col>_was_missing` y fuentes `<col>_source`
+Cada salida agrega indicadores `<col>_was_missing`, `<col>_was_observed`,
+`<col>_was_physically_derived`, `<col>_was_imputed` y fuentes `<col>_source`
 con valores como `observed`, `derived_density`, `derived_kepler`,
-`imputed_knn`, `imputed_median`, `imputed_iterative` o
-`excluded_too_missing`. Identificadores, categorias, links, referencias,
-errores y limites no entran en la matriz numerica de imputacion.
+`imputed_knn`, `imputed_median`, `imputed_iterative` o `excluded_too_missing`.
+Identificadores, categorias, links, referencias, errores y limites no entran en
+la matriz numerica de imputacion. En particular, `pl_dens` se etiqueta como
+derivada fisicamente cuando se reconstruye desde masa y radio, no como
+observacion astronomica independiente.
 
 Para conclusiones topologicas, comparar siempre:
 

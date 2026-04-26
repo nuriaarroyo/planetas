@@ -1,0 +1,50 @@
+[
+  {
+    "feature_group": "MAPPER_PHYS_FEATURES",
+    "method": "iterative",
+    "n_features": 3,
+    "before_complete_rows": 6199,
+    "before_complete_pct": 98.8203,
+    "after_complete_rows": 6273,
+    "after_complete_pct": 100.0,
+    "missing_columns": "",
+    "excluded_columns": "",
+    "columns": "pl_rade, pl_bmasse, pl_dens"
+  },
+  {
+    "feature_group": "MAPPER_ORB_FEATURES",
+    "method": "iterative",
+    "n_features": 4,
+    "before_complete_rows": 4312,
+    "before_complete_pct": 68.739,
+    "after_complete_rows": 6273,
+    "after_complete_pct": 100.0,
+    "missing_columns": "",
+    "excluded_columns": "",
+    "columns": "pl_orbper, pl_orbsmax, pl_insol, pl_eqt"
+  },
+  {
+    "feature_group": "MAPPER_JOINT_FEATURES",
+    "method": "iterative",
+    "n_features": 7,
+    "before_complete_rows": 4282,
+    "before_complete_pct": 68.2608,
+    "after_complete_rows": 6273,
+    "after_complete_pct": 100.0,
+    "missing_columns": "",
+    "excluded_columns": "",
+    "columns": "pl_rade, pl_bmasse, pl_dens, pl_orbper, pl_orbsmax, pl_insol, pl_eqt"
+  },
+  {
+    "feature_group": "MAPPER_JOINT_FEATURES + MAPPER_ORB_OPTIONAL_FEATURES",
+    "method": "iterative",
+    "n_features": 8,
+    "before_complete_rows": 3959,
+    "before_complete_pct": 63.1117,
+    "after_complete_rows": 0,
+    "after_complete_pct": 0.0,
+    "missing_columns": "",
+    "excluded_columns": "pl_orbeccen",
+    "columns": "pl_rade, pl_bmasse, pl_dens, pl_orbper, pl_orbsmax, pl_insol, pl_eqt, pl_orbeccen"
+  }
+]

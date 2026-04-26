@@ -1,0 +1,8 @@
+feature,rows_before,missing_raw,missing_raw_pct,missing_after_physical_derivation,missing_after_physical_derivation_pct,excluded_reason,rows_after,method,missing_after,missing_after_pct,observed_count,derived_density_count,derived_kepler_count,physically_derived_count,imputed_count,excluded_too_missing_count,still_missing_count
+pl_bmasse,6273,31,0.4942,31,0.4942,,6273,iterative,0,0.0,6242,0,0,0,31,0,0
+pl_dens,6273,6273,100.0,74,1.1797,,6273,iterative,0,0.0,0,6199,0,6199,74,0,0
+pl_eqt,6273,1600,25.5061,1600,25.5061,,6273,iterative,0,0.0,4673,0,0,0,1600,0,0
+pl_insol,6273,1876,29.9059,1876,29.9059,,6273,iterative,0,0.0,4397,0,0,0,1876,0,0
+pl_orbper,6273,339,5.4041,339,5.4041,,6273,iterative,0,0.0,5934,0,0,0,339,0,0
+pl_orbsmax,6273,428,6.8229,8,0.1275,,6273,iterative,0,0.0,5845,0,420,420,8,0,0
+pl_rade,6273,50,0.7971,50,0.7971,,6273,iterative,0,0.0,6223,0,0,0,50,0,0

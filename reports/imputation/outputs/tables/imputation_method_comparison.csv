@@ -1,0 +1,4 @@
+method,mean_mae_rank,mean_rmse_rank,n_columns_validated,n_features_fully_imputed,notes
+median,2.857142857142857,2.5714285714285716,7,7,Robust baseline. Topological stability is not inferred here; inspect Mapper outputs and bootstraps.
+knn,2.142857142857143,2.142857142857143,7,7,Default for local-neighborhood Mapper; compare topology against complete cases. Topological stability is not inferred here; inspect Mapper outputs and bootstraps.
+iterative,1.0,1.2857142857142858,7,7,Lowest validation error among tested methods. Advanced sensitivity; may impose global relationships. Topological stability is not inferred here; inspect Mapper outputs and bootstraps.

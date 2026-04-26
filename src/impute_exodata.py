@@ -19,9 +19,15 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--method",
-        default="knn",
+        default="iterative",
         choices=["median", "knn", "iterative", "compare"],
         help="Metodo de imputacion o comparacion de metodos.",
+    )
+    parser.add_argument(
+        "--visualized-method",
+        default="iterative",
+        choices=["median", "knn", "iterative"],
+        help="Metodo que se visualiza como principal en el reporte HTML y figuras.",
     )
     parser.add_argument("--n-neighbors", type=int, default=15, help="Vecinos para KNNImputer.")
     parser.add_argument(
@@ -59,6 +65,16 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Incluir pl_orbeccen como variable dinamica opcional.",
     )
+    parser.add_argument(
+        "--outputs-dir",
+        default=None,
+        help="Carpeta de figuras/tablas exportadas. Default: <reports-dir>/outputs.",
+    )
+    parser.add_argument(
+        "--skip-figure-export",
+        action="store_true",
+        help="No exportar PDFs individuales de figuras.",
+    )
     return parser.parse_args()
 
 
@@ -76,6 +92,7 @@ def main() -> None:
     reports_dir = resolve_reports_dir(args.reports_dir)
     config = ImputationConfig(
         method=args.method,
+        visualized_method=args.visualized_method,
         n_neighbors=args.n_neighbors,
         weights=args.weights,
         max_missing_pct=args.max_missing_pct,
@@ -88,12 +105,23 @@ def main() -> None:
 
     df = load_pscomppars(csv_path)
     result = run_imputation_pipeline(df, config)
-    paths = write_imputation_outputs(result, config, csv_path, reports_dir)
+    outputs_dir = Path(args.outputs_dir) if args.outputs_dir else reports_dir / "outputs"
+    if not outputs_dir.is_absolute():
+        outputs_dir = PROJECT_ROOT / outputs_dir
+    paths = write_imputation_outputs(
+        result,
+        config,
+        csv_path,
+        reports_dir,
+        outputs_dir=outputs_dir,
+        export_figures=not args.skip_figure_export,
+    )
 
     print("Imputacion generada correctamente.")
     print(f"CSV: {csv_path}")
     print(f"Filas: {len(df):,}")
     print(f"Metodo solicitado: {args.method}")
+    print(f"Metodo visualizado: {config.visualized_method}")
     print(f"Features incluidas: {', '.join(result.features_included)}")
     if not result.excluded_features.empty:
         print("Features excluidas:")
@@ -110,4 +138,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

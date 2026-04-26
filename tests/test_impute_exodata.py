@@ -78,6 +78,12 @@ class PhysicalDerivationTests(unittest.TestCase):
 
 
 class PipelineTests(unittest.TestCase):
+    def test_iterative_is_default_method_and_visualized_method(self) -> None:
+        config = ImputationConfig()
+
+        self.assertEqual(config.method, "iterative")
+        self.assertEqual(config.visualized_method, "iterative")
+
     def test_indicators_exist_and_mapper_tables_have_no_nan_after_imputation(self) -> None:
         config = ImputationConfig(method="knn", n_neighbors=2, validation_mask_frac=0.2, random_state=11)
         result = run_imputation_pipeline(synthetic_pscomppars(), config)
@@ -87,7 +93,14 @@ class PipelineTests(unittest.TestCase):
         for feature in result.features_included:
             self.assertIn(f"{feature}_was_missing", full.columns)
             self.assertIn(f"{feature}_source", full.columns)
+            self.assertIn(f"{feature}_was_observed", full.columns)
+            self.assertIn(f"{feature}_was_physically_derived", full.columns)
+            self.assertIn(f"{feature}_was_imputed", full.columns)
         self.assertFalse(mapper[result.features_included].isna().any().any())
+        values = full[result.features_included].to_numpy()
+        self.assertTrue(np.isfinite(values).all())
+        for feature in ["pl_rade", "pl_bmasse", "pl_dens", "pl_orbper", "pl_orbsmax", "pl_insol"]:
+            self.assertTrue((full[feature] > 0).all())
 
     def test_identifiers_and_references_do_not_enter_imputation_matrix(self) -> None:
         config = ImputationConfig(method="knn", n_neighbors=2)
@@ -127,7 +140,9 @@ class PipelineTests(unittest.TestCase):
                     "--reports-dir",
                     str(reports_dir),
                     "--method",
-                    "knn",
+                    "compare",
+                    "--visualized-method",
+                    "iterative",
                     "--n-neighbors",
                     "2",
                     "--validation-mask-frac",
@@ -140,11 +155,45 @@ class PipelineTests(unittest.TestCase):
             )
 
             self.assertIn("Imputacion generada correctamente", completed.stdout)
+            self.assertIn("Metodo visualizado: iterative", completed.stdout)
             self.assertEqual(csv_path.read_text(encoding="utf-8"), before)
-            self.assertTrue((reports_dir / "PSCompPars_imputed_knn.csv").exists())
-            self.assertTrue((reports_dir / "mapper_features_imputed_knn.csv").exists())
+            self.assertTrue((reports_dir / "PSCompPars_imputed_iterative.csv").exists())
+            self.assertTrue((reports_dir / "mapper_features_imputed_iterative.csv").exists())
+            report_html = (reports_dir / "imputation_report.html").read_text(encoding="utf-8")
+            self.assertIn("METODO VISUALIZADO", report_html)
+            self.assertIn("<strong>iterative</strong>", report_html)
+            expected_pdfs = [
+                "01_missingness_before_after.pdf",
+                "02_value_source_composition.pdf",
+                "03_mapper_coverage.pdf",
+                "04_masked_validation_mae_by_feature.pdf",
+                "05_masked_validation_spearman_heatmap.pdf",
+                "06_method_comparison.pdf",
+                "07_distribution_pl_rade.pdf",
+                "08_distribution_pl_bmasse.pdf",
+                "09_distribution_pl_dens.pdf",
+                "10_distribution_pl_orbper.pdf",
+                "11_distribution_pl_orbsmax.pdf",
+                "12_distribution_pl_insol.pdf",
+                "13_distribution_pl_eqt.pdf",
+                "14_scatter_mass_radius.pdf",
+                "15_scatter_density_radius.pdf",
+                "16_scatter_orbper_orbsmax.pdf",
+                "17_scatter_insol_eqt.pdf",
+            ]
+            for filename in expected_pdfs:
+                path = reports_dir / "outputs" / "figures_pdf" / filename
+                self.assertTrue(path.exists(), filename)
+                self.assertGreater(path.stat().st_size, 0, filename)
+            for filename in [
+                "imputation_method_comparison.csv",
+                "imputation_validation_metrics.csv",
+                "imputation_value_source_composition.csv",
+                "imputation_missingness_summary.csv",
+                "mapper_coverage_summary.csv",
+            ]:
+                self.assertTrue((reports_dir / "outputs" / "tables" / filename).exists(), filename)
 
 
 if __name__ == "__main__":
     unittest.main()
-

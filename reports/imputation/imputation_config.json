@@ -1,6 +1,7 @@
 {
   "csv_path": "C:\\Users\\herie\\git\\planetas\\data\\PSCompPars_2026.04.25_17.36.36.csv",
   "method": "compare",
+  "visualized_method": "iterative",
   "n_neighbors": 15,
   "weights": "distance",
   "max_missing_pct": 60.0,
