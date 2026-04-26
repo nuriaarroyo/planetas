@@ -22,6 +22,25 @@ class DensityDerivationAudit:
     formula: str = DENSITY_FORMULA
 
 
+@dataclass(frozen=True)
+class KeplerDerivationAudit:
+    """Counts that make the semimajor-axis derivation traceable."""
+
+    observed_before: int
+    missing_before: int
+    derived_count: int
+    missing_after: int
+    formula: str = "pl_orbsmax = (st_mass * (pl_orbper / 365.25)**2)**(1/3)"
+
+
+@dataclass(frozen=True)
+class PhysicalDerivationAudit:
+    """Audit for physical derivations executed before statistical imputation."""
+
+    density: DensityDerivationAudit
+    kepler: KeplerDerivationAudit
+
+
 def derive_planet_density(df: pd.DataFrame) -> tuple[pd.DataFrame, DensityDerivationAudit]:
     """Fill missing ``pl_dens`` values from mass and radius when possible.
 
@@ -51,7 +70,7 @@ def derive_planet_density(df: pd.DataFrame) -> tuple[pd.DataFrame, DensityDeriva
 
     source = pd.Series(pd.NA, index=out.index, dtype="object")
     source.loc[density.notna()] = "observed"
-    source.loc[derived_mask] = "derived_from_pl_bmasse_pl_rade"
+    source.loc[derived_mask] = "derived_density"
     source.loc[density.isna()] = pd.NA
 
     out["pl_dens"] = density
@@ -71,3 +90,54 @@ def derive_planet_density(df: pd.DataFrame) -> tuple[pd.DataFrame, DensityDeriva
     )
     return out, audit
 
+
+def derive_semimajor_axis(df: pd.DataFrame) -> tuple[pd.DataFrame, KeplerDerivationAudit]:
+    """Fill missing ``pl_orbsmax`` from orbital period and stellar mass.
+
+    Assumes ``pl_orbper`` is in days, ``st_mass`` in solar masses, and returns
+    ``pl_orbsmax`` in AU. Planet mass is neglected relative to stellar mass.
+    """
+
+    out = df.copy()
+    if "pl_orbsmax" not in out.columns:
+        out["pl_orbsmax"] = np.nan
+
+    semimajor = pd.to_numeric(out["pl_orbsmax"], errors="coerce")
+    observed_before = int(semimajor.notna().sum())
+    missing_before = int(semimajor.isna().sum())
+
+    if {"pl_orbper", "st_mass"}.issubset(out.columns):
+        period_days = pd.to_numeric(out["pl_orbper"], errors="coerce")
+        stellar_mass = pd.to_numeric(out["st_mass"], errors="coerce")
+        p_years = period_days / 365.25
+        valid = (semimajor.isna()) & (period_days > 0) & (stellar_mass > 0)
+        derived_values = np.power(stellar_mass * p_years.pow(2), 1.0 / 3.0)
+        semimajor = semimajor.mask(valid, derived_values)
+    else:
+        valid = pd.Series(False, index=out.index)
+
+    source = pd.Series(pd.NA, index=out.index, dtype="object")
+    source.loc[semimajor.notna()] = "observed"
+    source.loc[valid] = "derived_kepler"
+    source.loc[semimajor.isna()] = pd.NA
+
+    out["pl_orbsmax"] = semimajor
+    out["pl_orbsmax_source"] = source
+    out.attrs["kepler_derivation"] = {
+        "formula": "pl_orbsmax = (st_mass * (pl_orbper / 365.25)**2)**(1/3)",
+        "derived_count": int(valid.sum()),
+    }
+
+    audit = KeplerDerivationAudit(
+        observed_before=observed_before,
+        missing_before=missing_before,
+        derived_count=int(valid.sum()),
+        missing_after=int(semimajor.isna().sum()),
+    )
+    return out, audit
+
+
+def apply_physical_derivations(df: pd.DataFrame) -> tuple[pd.DataFrame, PhysicalDerivationAudit]:
+    out, density_audit = derive_planet_density(df)
+    out, kepler_audit = derive_semimajor_axis(out)
+    return out, PhysicalDerivationAudit(density=density_audit, kepler=kepler_audit)

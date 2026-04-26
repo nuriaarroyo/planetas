@@ -1,0 +1,2 @@
+density_column_created,density_observed_before,density_missing_before,density_derived_count,density_missing_after,density_formula,kepler_observed_before,kepler_missing_before,kepler_derived_count,kepler_missing_after,kepler_formula
+True,0,6273,6199,74,pl_dens = 5.514 * pl_bmasse / pl_rade**3,5845,428,420,8,pl_orbsmax = (st_mass * (pl_orbper / 365.25)**2)**(1/3)

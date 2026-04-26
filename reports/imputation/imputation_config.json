@@ -1,0 +1,31 @@
+{
+  "csv_path": "C:\\Users\\herie\\git\\planetas\\data\\PSCompPars_2026.04.25_17.36.36.csv",
+  "method": "compare",
+  "n_neighbors": 15,
+  "weights": "distance",
+  "max_missing_pct": 60.0,
+  "validation_mask_frac": 0.15,
+  "random_state": 42,
+  "n_multiple_imputations": 1,
+  "include_stellar_context": false,
+  "include_orbital_eccentricity": false,
+  "features_requested": [
+    "pl_rade",
+    "pl_bmasse",
+    "pl_dens",
+    "pl_orbper",
+    "pl_orbsmax",
+    "pl_insol",
+    "pl_eqt"
+  ],
+  "features_included": [
+    "pl_rade",
+    "pl_bmasse",
+    "pl_dens",
+    "pl_orbper",
+    "pl_orbsmax",
+    "pl_insol",
+    "pl_eqt"
+  ],
+  "excluded_features": []
+}

@@ -22,6 +22,13 @@ def log_feature_subset(features: Iterable[str], candidates: Iterable[str]) -> li
     return [feature for feature in features if feature in candidate_set]
 
 
+def safe_log10(s: pd.Series) -> pd.Series:
+    """Convert positive values to log10 and treat non-positive values as missing."""
+
+    values = pd.to_numeric(s, errors="coerce").replace([np.inf, -np.inf], np.nan)
+    return np.log10(values.where(values > 0))
+
+
 def apply_log10_transform(
     matrix: pd.DataFrame,
     log_features: Iterable[str],
@@ -44,8 +51,7 @@ def apply_log10_transform(
         if column in log_set:
             nonpositive = values.notna() & (values <= 0)
             nonpositive_count = int(nonpositive.sum())
-            values = values.where(values > 0)
-            values = np.log10(values)
+            values = safe_log10(values)
         transformed[column] = values
         rows.append(
             {
@@ -69,4 +75,3 @@ def invert_log10_transform(
         if column in original.columns:
             original[column] = np.power(10.0, pd.to_numeric(original[column], errors="coerce"))
     return original
-

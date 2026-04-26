@@ -1,0 +1,5 @@
+feature_group,method,n_features,before_complete_rows,before_complete_pct,after_complete_rows,after_complete_pct,missing_columns,excluded_columns,columns
+MAPPER_PHYS_FEATURES,iterative,3,6199,98.8203,6273,100.0,,,"pl_rade, pl_bmasse, pl_dens"
+MAPPER_ORB_FEATURES,iterative,4,4312,68.739,6273,100.0,,,"pl_orbper, pl_orbsmax, pl_insol, pl_eqt"
+MAPPER_JOINT_FEATURES,iterative,7,4282,68.2608,6273,100.0,,,"pl_rade, pl_bmasse, pl_dens, pl_orbper, pl_orbsmax, pl_insol, pl_eqt"
+MAPPER_JOINT_FEATURES + MAPPER_ORB_OPTIONAL_FEATURES,iterative,8,3959,63.1117,0,0.0,,pl_orbeccen,"pl_rade, pl_bmasse, pl_dens, pl_orbper, pl_orbsmax, pl_insol, pl_eqt, pl_orbeccen"

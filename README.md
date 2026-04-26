@@ -69,56 +69,87 @@ Tambien puedes pasar un archivo explicitamente:
 python .\src\eda_exodata.py --csv .\data\PSCompPars_2026.04.25_17.36.36.csv --reports-dir .\reports\PSCompPars_2026.04.25_17.36.36
 ```
 
-## Imputacion para Mapper/TDA y ML
+## Imputación de valores faltantes
 
 El pipeline de imputacion esta pensado para no inventar datos sin control. El
-metodo principal es:
+default metodologico es:
 
 ```text
 derivacion fisica -> log-transform -> RobustScaler -> KNNImputer -> inversion de escala -> auditoria
 ```
 
-Primero se preservan valores observados de `pl_dens` y solo se derivan faltantes
-cuando hay masa y radio positivos:
+`KNNImputer` es el metodo principal porque Mapper/TDA depende de vecindades
+locales: imputa usando planetas cercanos en el espacio de variables observadas.
+`median` queda como baseline robusto. `iterative` queda como sensibilidad
+avanzada, no como default, porque puede imponer relaciones globales y suavizar
+artificialmente la topologia.
+
+Antes de imputar se preservan observaciones y se derivan solo propiedades con
+formula fisica clara:
 
 ```text
 pl_dens = 5.514 * pl_bmasse / pl_rade**3
+pl_orbsmax = (st_mass * (pl_orbper / 365.25)**2)**(1/3)
 ```
 
-Despues se transforman en log10 las variables positivas y sesgadas, se escala
-con `RobustScaler`, se imputa en el espacio escalado y se vuelve a unidades
-fisicas. `KNNImputer` es el default porque Mapper depende de vecindades locales:
-la imputacion se apoya en planetas cercanos en las variables observadas. `median`
-queda como baseline robusto e `iterative` como sensibilidad avanzada, porque
-puede imponer relaciones globales y suavizar artificialmente la topologia.
+La transformacion log10 se aplica antes del escalado a variables positivas y
+sesgadas (`pl_rade`, `pl_bmasse`, `pl_dens`, `pl_orbper`, `pl_orbsmax`,
+`pl_insol`, `sy_dist`, `st_mass`, `st_rad`, `st_lum`). No se aplica log a
+`pl_eqt`, `pl_orbeccen`, `st_teff`, `st_met`, flags 0/1 ni categoricas.
+`RobustScaler` reduce el impacto de colas largas antes de calcular distancias.
 
-Conjuntos disponibles:
-
-- `mapper_phys`: `pl_rade`, `pl_bmasse`, `pl_dens`
-- `mapper_core`: fisicas + orbitales + estrella/sistema
-- `mapper_wide`: `mapper_core` + `pl_insol`, `pl_eqt`
-
-Ejecutar el pipeline recomendado:
+Comandos principales:
 
 ```powershell
-python .\src\impute_exodata.py --feature-set mapper_core
+python .\src\impute_exodata.py --method knn
+python .\src\impute_exodata.py --method median
+python .\src\impute_exodata.py --method iterative
+python .\src\impute_exodata.py --method compare
 ```
 
-Tambien se pueden comparar sensibilidades en el conjunto amplio:
+El default equivale a:
 
 ```powershell
-python .\src\impute_exodata.py --feature-set mapper_wide --methods knn,median,iterative --n-neighbors 7
+python .\src\impute_exodata.py --method knn --n-neighbors 15 --weights distance
 ```
 
-Salidas principales:
+Ejemplo completo:
 
-- `data/processed/<csv>/imputation/mapper_features_knn_imputed.csv`: matriz principal para Mapper/TDA y ML.
-- `data/processed/<csv>/imputation/mapper_features_median_imputed.csv`: baseline de mediana.
-- `data/processed/<csv>/imputation/mapper_features_iterative_imputed.csv`: sensibilidad avanzada.
-- `reports/<csv>/imputation/imputation_missingness.csv`: nulos antes/despues, derivaciones e invalidos para log.
-- `reports/<csv>/imputation/imputation_validation_summary.csv`: validacion con casos completos enmascarados.
-- `reports/<csv>/imputation/imputation_complete_case_comparison.csv`: comparacion de distribuciones contra casos completos.
-- `reports/<csv>/imputation/imputation_config.json`: configuracion reproducible.
+```powershell
+python .\src\impute_exodata.py --csv .\data\PSCompPars_2026.04.25_17.36.36.csv --reports-dir .\reports\imputation --method knn --n-neighbors 15 --weights distance --max-missing-pct 60 --validation-mask-frac 0.15 --random-state 42
+```
+
+Flags opcionales:
+
+- `--include-orbital-eccentricity`: agrega `pl_orbeccen`.
+- `--include-stellar-context`: agrega `st_teff`, `st_met`, `st_mass`, `st_rad`, `st_lum`, `sy_pnum`, `sy_snum`.
+- `--n-multiple-imputations`: genera varias salidas si `--method iterative`.
+
+Salidas principales en `reports/imputation/`:
+
+- `PSCompPars_imputed_knn.csv`, `PSCompPars_imputed_median.csv`, `PSCompPars_imputed_iterative.csv`.
+- `mapper_features_complete_case.csv`.
+- `mapper_features_imputed_knn.csv`, `mapper_features_imputed_median.csv`, `mapper_features_imputed_iterative.csv`.
+- `validation_metrics_<method>.csv` y `validation_predictions_long_<method>.csv`.
+- `missingness_profile_before.csv`, `missingness_profile_after_<method>.csv`.
+- `feature_coverage_before_after_<method>.csv`.
+- `imputed_values_long_<method>.csv`.
+- `method_comparison.csv`.
+- `imputation_report.html`.
+
+Cada salida agrega indicadores `<col>_was_missing` y fuentes `<col>_source`
+con valores como `observed`, `derived_density`, `derived_kepler`,
+`imputed_knn`, `imputed_median`, `imputed_iterative` o
+`excluded_too_missing`. Identificadores, categorias, links, referencias,
+errores y limites no entran en la matriz numerica de imputacion.
+
+Para conclusiones topologicas, comparar siempre:
+
+1. casos completos,
+2. KNN imputado,
+3. median baseline,
+4. iterative sensitivity,
+5. bootstrap o variacion de parametros Mapper.
 
 ## Salida principal
 

@@ -1,0 +1,8 @@
+feature,rows,missing_raw,missing_raw_pct,missing_after_physical_derivation,missing_after_physical_derivation_pct,excluded_reason
+pl_rade,6273,50,0.7971,50,0.7971,
+pl_bmasse,6273,31,0.4942,31,0.4942,
+pl_dens,6273,6273,100.0,74,1.1797,
+pl_orbper,6273,339,5.4041,339,5.4041,
+pl_orbsmax,6273,428,6.8229,8,0.1275,
+pl_insol,6273,1876,29.9059,1876,29.9059,
+pl_eqt,6273,1600,25.5061,1600,25.5061,
