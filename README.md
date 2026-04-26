@@ -25,17 +25,30 @@ para clustering conviene comenzar con subconjuntos numericos interpretables.
 - `reports/`: salidas generadas: HTML interactivo, tablas de nulos, rangos y correlaciones.
 - `data/`: espacio recomendado para organizar datos si despues se mueve el CSV.
 
+## Datos
+
+Los CSV estan en `data/`.
+
+- `PSCompPars_2026.04.25_14.43.08.csv`: tabla completa, 320 columnas.
+- `PSCompPars_2026.04.25_17.36.36.csv`: tabla compacta, 84 columnas, mismas filas.
+
+Para clustering inicial, la tabla compacta es mas manejable porque conserva las
+variables centrales y elimina muchos enlaces/metadatos. La excepcion importante
+es `pl_dens`: si no viene en el CSV, el script la deriva como
+`5.514 * pl_bmasse / pl_rade^3`.
+
 ## Como ejecutar
 
 ```powershell
 python .\src\eda_exodata.py
 ```
 
-El script detecta automaticamente `PSCompPars_*.csv` en la raiz del proyecto.
+El script detecta automaticamente `PSCompPars_*.csv` en `data/` y toma el mas
+reciente por nombre.
 Tambien puedes pasar un archivo explicitamente:
 
 ```powershell
-python .\src\eda_exodata.py --csv .\PSCompPars_2026.04.25_14.43.08.csv
+python .\src\eda_exodata.py --csv .\data\PSCompPars_2026.04.25_17.36.36.csv --reports-dir .\reports\PSCompPars_2026.04.25_17.36.36
 ```
 
 ## Salida principal
@@ -43,7 +56,7 @@ python .\src\eda_exodata.py --csv .\PSCompPars_2026.04.25_14.43.08.csv
 Abre el archivo:
 
 ```text
-reports/exodata_eda_plotly.html
+reports/PSCompPars_2026.04.25_17.36.36/exodata_eda_plotly.html
 ```
 
 Ese reporte contiene visualizaciones interactivas en Plotly para nulos,

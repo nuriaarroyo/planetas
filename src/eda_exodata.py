@@ -40,9 +40,10 @@ def find_csv(explicit_path: str | None) -> Path:
         return path
 
     candidates = sorted(PROJECT_ROOT.glob("PSCompPars_*.csv"))
+    candidates += sorted((PROJECT_ROOT / "data").glob("PSCompPars_*.csv"))
     candidates += sorted((PROJECT_ROOT / "data" / "raw").glob("PSCompPars_*.csv"))
     if not candidates:
-        raise FileNotFoundError("No encontre PSCompPars_*.csv en la raiz ni en data/raw.")
+        raise FileNotFoundError("No encontre PSCompPars_*.csv en la raiz, data/ ni data/raw.")
     return candidates[-1]
 
 
@@ -60,7 +61,19 @@ def parse_column_descriptions(csv_path: Path) -> dict[str, str]:
 
 
 def load_data(csv_path: Path) -> pd.DataFrame:
-    return pd.read_csv(csv_path, comment="#", low_memory=False)
+    df = pd.read_csv(csv_path, comment="#", low_memory=False)
+    if "pl_dens" not in df.columns and {"pl_bmasse", "pl_rade"}.issubset(df.columns):
+        mass = pd.to_numeric(df["pl_bmasse"], errors="coerce")
+        radius = pd.to_numeric(df["pl_rade"], errors="coerce")
+        valid = (mass > 0) & (radius > 0)
+        df["pl_dens"] = np.where(valid, 5.514 * mass / radius.pow(3), np.nan)
+        density_source = pd.Series(pd.NA, index=df.index, dtype="object")
+        density_source.loc[valid] = "derived_from_pl_bmasse_pl_rade"
+        df["pl_dens_source"] = density_source
+        df.attrs["derived_columns"] = {
+            "pl_dens": "Derived as 5.514 * pl_bmasse / pl_rade^3 because source file did not include pl_dens."
+        }
+    return df
 
 
 def column_profile(df: pd.DataFrame, descriptions: dict[str, str]) -> pd.DataFrame:
@@ -142,14 +155,17 @@ def clustering_coverage(df: pd.DataFrame) -> pd.DataFrame:
     total = len(df)
     for name, cols in CLUSTERING_FEATURE_SETS.items():
         available = [col for col in cols if col in df.columns]
+        missing_columns = [col for col in cols if col not in df.columns]
         complete = int(df[available].notna().all(axis=1).sum()) if available else 0
         rows.append(
             {
                 "feature_set": name,
                 "n_features": len(available),
+                "missing_features": len(missing_columns),
                 "complete_rows": complete,
                 "complete_pct": round(complete / total * 100, 3),
                 "columns": ", ".join(available),
+                "missing_columns": ", ".join(missing_columns),
             }
         )
     return pd.DataFrame(rows).sort_values("complete_pct", ascending=False)
@@ -514,6 +530,19 @@ def build_report(
 
     missing_over_80 = profile[profile["missing_pct"] >= 80].shape[0]
     missing_over_50 = profile[profile["missing_pct"] >= 50].shape[0]
+    derived_columns = df.attrs.get("derived_columns", {})
+    derived_note = ""
+    if derived_columns:
+        items = "".join(
+            f"<li><code>{html.escape(column)}</code>: {html.escape(description)}</li>"
+            for column, description in derived_columns.items()
+        )
+        derived_note = (
+            "<section class='note'><h2>Variables derivadas</h2>"
+            "<p>Este archivo no traia todas las variables clave del PDF, asi que se agregaron columnas derivadas "
+            "solo para el analisis reproducible:</p>"
+            f"<ul>{items}</ul></section>"
+        )
     key_missing = profile[profile["column"].isin(CONTEST_KEY_COLUMNS)][
         ["column", "description", "missing_pct", "non_null", "unique"]
     ].sort_values("missing_pct", ascending=False)
@@ -559,6 +588,7 @@ def build_report(
         "<p>Este reporte por eso hace dos cosas: perfila todas las columnas y despues se concentra en las variables clave "
         "para interpretar distribuciones, correlaciones y cobertura antes de clustering.</p>",
         "</section>",
+        derived_note,
         "<section>",
         "<h2>Resumen del dataset</h2>",
         "<div class='grid'>",
@@ -609,6 +639,9 @@ def build_report(
 def write_outputs(csv_path: Path, df: pd.DataFrame, reports_dir: Path) -> dict[str, Path]:
     reports_dir.mkdir(parents=True, exist_ok=True)
     descriptions = parse_column_descriptions(csv_path)
+    if "pl_dens" in df.attrs.get("derived_columns", {}):
+        descriptions["pl_dens"] = "Planet Density [g/cm3], derived from pl_bmasse and pl_rade"
+        descriptions["pl_dens_source"] = "Source marker for derived planet density"
     profile = column_profile(df, descriptions)
     numeric_all = numeric_profile(df, descriptions)
     key_stats = key_variable_stats(df, descriptions)
@@ -655,6 +688,7 @@ def write_outputs(csv_path: Path, df: pd.DataFrame, reports_dir: Path) -> dict[s
         "csv_path": str(csv_path),
         "shape": {"rows": int(df.shape[0]), "columns": int(df.shape[1])},
         "numeric_columns": int(df.select_dtypes(include="number").shape[1]),
+        "derived_columns": df.attrs.get("derived_columns", {}),
         "contest_key_columns_available": [col for col in CONTEST_KEY_COLUMNS if col in df.columns],
         "clustering_feature_sets": coverage.to_dict(orient="records"),
         "recommendation": (
@@ -683,14 +717,18 @@ def write_outputs(csv_path: Path, df: pd.DataFrame, reports_dir: Path) -> dict[s
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Genera EDA Plotly para ExoData Challenge.")
     parser.add_argument("--csv", default=None, help="Ruta al CSV PSCompPars. Si se omite, se autodetecta.")
-    parser.add_argument("--reports-dir", default=str(REPORTS_DIR), help="Carpeta de salida.")
+    parser.add_argument(
+        "--reports-dir",
+        default=None,
+        help="Carpeta de salida. Si se omite, usa reports/<nombre-del-csv>.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
     csv_path = find_csv(args.csv)
-    reports_dir = Path(args.reports_dir)
+    reports_dir = Path(args.reports_dir) if args.reports_dir else REPORTS_DIR / csv_path.stem
     if not reports_dir.is_absolute():
         reports_dir = PROJECT_ROOT / reports_dir
 

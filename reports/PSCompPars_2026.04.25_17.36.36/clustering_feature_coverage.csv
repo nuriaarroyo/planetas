@@ -1,0 +1,5 @@
+feature_set,n_features,missing_features,complete_rows,complete_pct,columns,missing_columns
+pdf_core_no_mass_density,7,0,4983,79.436,"pl_rade, pl_orbper, pl_orbsmax, pl_orbeccen, st_teff, st_met, sy_pnum",
+pdf_core_with_mass_density,9,0,4963,79.117,"pl_rade, pl_bmasse, pl_dens, pl_orbper, pl_orbsmax, pl_orbeccen, st_teff, st_met, sy_pnum",
+habitability,7,0,4148,66.125,"pl_rade, pl_orbper, pl_orbsmax, st_teff, pl_insol, pl_eqt, sy_pnum",
+wide_physical,11,0,3908,62.299,"pl_rade, pl_bmasse, pl_dens, pl_orbper, pl_orbsmax, pl_orbeccen, pl_insol, pl_eqt, st_teff, st_met, sy_pnum",

@@ -1,0 +1,69 @@
+{
+  "csv_path": "C:\\Users\\narro\\Desktop\\semestre\\planetas\\data\\PSCompPars_2026.04.25_17.36.36.csv",
+  "shape": {
+    "rows": 6273,
+    "columns": 86
+  },
+  "numeric_columns": 76,
+  "derived_columns": {
+    "pl_dens": "Derived as 5.514 * pl_bmasse / pl_rade^3 because source file did not include pl_dens."
+  },
+  "contest_key_columns_available": [
+    "pl_name",
+    "hostname",
+    "discoverymethod",
+    "disc_year",
+    "pl_rade",
+    "pl_radj",
+    "pl_bmasse",
+    "pl_bmassj",
+    "pl_dens",
+    "pl_orbper",
+    "pl_orbsmax",
+    "pl_orbeccen",
+    "st_teff",
+    "st_met",
+    "sy_pnum",
+    "pl_insol",
+    "pl_eqt"
+  ],
+  "clustering_feature_sets": [
+    {
+      "feature_set": "pdf_core_no_mass_density",
+      "n_features": 7,
+      "missing_features": 0,
+      "complete_rows": 4983,
+      "complete_pct": 79.436,
+      "columns": "pl_rade, pl_orbper, pl_orbsmax, pl_orbeccen, st_teff, st_met, sy_pnum",
+      "missing_columns": ""
+    },
+    {
+      "feature_set": "pdf_core_with_mass_density",
+      "n_features": 9,
+      "missing_features": 0,
+      "complete_rows": 4963,
+      "complete_pct": 79.117,
+      "columns": "pl_rade, pl_bmasse, pl_dens, pl_orbper, pl_orbsmax, pl_orbeccen, st_teff, st_met, sy_pnum",
+      "missing_columns": ""
+    },
+    {
+      "feature_set": "habitability",
+      "n_features": 7,
+      "missing_features": 0,
+      "complete_rows": 4148,
+      "complete_pct": 66.125,
+      "columns": "pl_rade, pl_orbper, pl_orbsmax, st_teff, pl_insol, pl_eqt, sy_pnum",
+      "missing_columns": ""
+    },
+    {
+      "feature_set": "wide_physical",
+      "n_features": 11,
+      "missing_features": 0,
+      "complete_rows": 3908,
+      "complete_pct": 62.299,
+      "columns": "pl_rade, pl_bmasse, pl_dens, pl_orbper, pl_orbsmax, pl_orbeccen, pl_insol, pl_eqt, st_teff, st_met, sy_pnum",
+      "missing_columns": ""
+    }
+  ],
+  "recommendation": "Usa todas las columnas para auditoria, pero empieza clustering con variables del PDF. Evita IDs, enlaces, errores/limites y duplicados de unidad como pl_radj/pl_bmassj."
+}
