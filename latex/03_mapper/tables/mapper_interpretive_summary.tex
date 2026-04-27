@@ -1,0 +1,34 @@
+\subsection*{Key Findings}
+\begin{itemize}
+\item Orbital Mapper shows high structural complexity with low imputation dependence.
+\item Thermal Mapper shows high complexity but high imputation dependence.
+\item Adding derived density slightly modifies, and in this run reduces, Mapper complexity.
+\end{itemize}
+
+\subsection*{Promising Signals}
+\begin{itemize}
+\item The orbital PCA Mapper is a high-priority graph for scientific inspection: it combines nontrivial cycle structure with low imputation dependence.
+\item Highlighted node catalog available with 495 node-level interpretation records.
+\item Connected-component summaries available for 6 principal graphs.
+\end{itemize}
+
+\subsection*{Risky Configurations}
+\begin{itemize}
+\item The thermal Mapper should be treated cautiously because more than half of its nodes exceed the high-imputation threshold.
+\end{itemize}
+
+\subsection*{Density Effect}
+Adding derived density reduces cycle complexity in the joint space, suggesting that density acts as a regularizing coordinate rather than introducing additional branching.
+
+\subsection*{Lens Effect}
+Results are lens-sensitive; pca2 should remain the primary interpretation layer, while density/domain are sensitivity probes.
+
+\subsection*{Next Steps}
+\begin{itemize}
+\item Bootstrap stability for principal graphs.
+\item Null models based on column-wise shuffling.
+\item Astrophysical review of highlighted nodes and components.
+\item Bootstrap was not run in this execution.
+\item Null models were not run in this execution.
+\item Multi-method Mapper comparison was skipped or partial because not all imputation inputs were available.
+\end{itemize}

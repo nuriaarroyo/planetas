@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from pathlib import Path
 from typing import Any
@@ -8,17 +9,19 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from .feature_sets import SPACE_COMPARISON_ORDER
 from .interpretation import build_interpretive_summary_files, generate_interpretation_summary
 from .io import ensure_mapper_output_tree, write_json
 from .node_selection import MAIN_GRAPH_CONFIGS, build_component_summary, build_highlighted_nodes, build_main_graph_selection
 from .planet_classes import add_planet_physical_labels
 from .validation import run_bootstrap_validation, run_imputation_method_comparison, run_null_models
+from visual_style import LENS_MARKERS, PROJECT_COLOR_CYCLE, SOURCE_PALETTE, apply_axis_style, configure_matplotlib, style_colorbar
 
 
 def _import_matplotlib():
     import matplotlib
 
-    matplotlib.use("Agg")
+    configure_matplotlib(matplotlib)
     import matplotlib.pyplot as plt
 
     return plt
@@ -47,11 +50,10 @@ def _config_labels(metrics_df: pd.DataFrame) -> list[str]:
 
 
 def build_space_comparison(metrics_df: pd.DataFrame) -> pd.DataFrame:
-    order = ["phys_min", "phys_density", "orbital", "thermal", "orb_thermal", "joint_no_density", "joint"]
     frame = metrics_df[(metrics_df["lens"] == "pca2") & (metrics_df["n_cubes"] == 10)].copy()
     if frame.empty:
         return pd.DataFrame()
-    frame["space"] = pd.Categorical(frame["space"], categories=order, ordered=True)
+    frame["space"] = pd.Categorical(frame["space"], categories=SPACE_COMPARISON_ORDER, ordered=True)
     return frame.sort_values(["space", "overlap"]).reset_index(drop=True)
 
 
@@ -269,10 +271,10 @@ def _bar_complexity(metrics_df: pd.DataFrame, pdf_path: Path, png_path: Path) ->
     labels = _config_labels(metrics_df)
     x = np.arange(len(labels))
     fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=True)
-    for ax, column, color in zip(axes, ["n_nodes", "n_edges", "beta_1"], ["#0f4c5c", "#e36414", "#6d597a"]):
-        ax.bar(x, pd.to_numeric(metrics_df[column], errors="coerce").fillna(0), color=color)
-        ax.set_ylabel(column)
-    axes[0].set_title("Mapper graph size and complexity", loc="left", fontsize=14, fontweight="bold")
+    for ax, column, color in zip(axes, ["n_nodes", "n_edges", "beta_1"], PROJECT_COLOR_CYCLE[:3]):
+        ax.bar(x, pd.to_numeric(metrics_df[column], errors="coerce").fillna(0), color=color, width=0.72)
+        apply_axis_style(ax, ylabel=column)
+    apply_axis_style(axes[0], title="Mapper graph size and complexity")
     axes[-1].set_xticks(x, labels, rotation=35, ha="right")
     _save_figure(fig, pdf_path, png_path)
     plt.close(fig)
@@ -291,11 +293,12 @@ def _heatmap(frame: pd.DataFrame, columns: list[str], title: str, pdf_path: Path
     matrix = matrix.fillna(0.0)
     plt = _import_matplotlib()
     fig, ax = plt.subplots(figsize=(14, max(6, len(frame) * 0.45)))
-    image = ax.imshow(matrix.to_numpy(dtype=float), aspect="auto", cmap="coolwarm")
-    ax.set_title(title, loc="left", fontsize=14, fontweight="bold")
+    image = ax.imshow(matrix.to_numpy(dtype=float), aspect="auto", cmap="RdYlBu_r")
+    apply_axis_style(ax, title=title)
     ax.set_xticks(range(len(use_columns)), use_columns, rotation=35, ha="right")
     ax.set_yticks(range(len(frame)), _config_labels(frame))
-    fig.colorbar(image, ax=ax, label="z-score")
+    cbar = fig.colorbar(image, ax=ax)
+    style_colorbar(cbar, "z-score")
     _save_figure(fig, pdf_path, png_path)
     plt.close(fig)
 
@@ -312,11 +315,12 @@ def _distance_heatmap(distances_df: pd.DataFrame, pdf_path: Path, png_path: Path
         matrix.loc[row["graph_b"], row["graph_a"]] = float(row["metric_zscore_l2_distance"])
     plt = _import_matplotlib()
     fig, ax = plt.subplots(figsize=(12, 10))
-    image = ax.imshow(matrix.to_numpy(dtype=float), aspect="auto", cmap="YlGnBu")
-    ax.set_title("Metric z-score L2 distances", loc="left", fontsize=14, fontweight="bold")
+    image = ax.imshow(matrix.to_numpy(dtype=float), aspect="auto", cmap="Blues")
+    apply_axis_style(ax, title="Metric z-score L2 distances")
     ax.set_xticks(range(len(labels)), labels, rotation=45, ha="right")
     ax.set_yticks(range(len(labels)), labels)
-    fig.colorbar(image, ax=ax, label="metric_zscore_l2_distance")
+    cbar = fig.colorbar(image, ax=ax)
+    style_colorbar(cbar, "metric_zscore_l2_distance")
     _save_figure(fig, pdf_path, png_path)
     plt.close(fig)
 
@@ -327,13 +331,19 @@ def _scatter_nodes_cycles(metrics_df: pd.DataFrame, pdf_path: Path, png_path: Pa
         return
     plt = _import_matplotlib()
     fig, ax = plt.subplots(figsize=(10, 7))
-    colors = {space: color for space, color in zip(sorted(metrics_df["space"].astype(str).unique()), ["#0f4c5c", "#e36414", "#6d597a", "#2a9d8f", "#bc6c25", "#8a5a44", "#577590"])}
-    markers = {"pca2": "o", "density": "s", "domain": "^"}
+    colors = {space: color for space, color in zip(sorted(metrics_df["space"].astype(str).unique()), PROJECT_COLOR_CYCLE)}
     for row in metrics_df.itertuples(index=False):
-        ax.scatter(row.n_nodes, row.beta_1, color=colors.get(str(row.space), "#333333"), marker=markers.get(str(row.lens), "o"), s=80, alpha=0.85)
-    ax.set_title("Mapper nodes vs cycles", loc="left", fontsize=14, fontweight="bold")
-    ax.set_xlabel("n_nodes")
-    ax.set_ylabel("beta_1")
+        ax.scatter(
+            row.n_nodes,
+            row.beta_1,
+            color=colors.get(str(row.space), "#334155"),
+            marker=LENS_MARKERS.get(str(row.lens), "o"),
+            s=92,
+            alpha=0.88,
+            edgecolors="#ffffff",
+            linewidths=0.8,
+        )
+    apply_axis_style(ax, title="Mapper nodes vs cycles", xlabel="n_nodes", ylabel="beta_1")
     _save_figure(fig, pdf_path, png_path)
     plt.close(fig)
 
@@ -350,11 +360,20 @@ def _simple_bar_from_table(table: pd.DataFrame, title: str, pdf_path: Path, png_
         plt.close(fig)
         return
     numeric.plot(kind="bar", ax=ax)
-    ax.set_title(title, loc="left", fontsize=14, fontweight="bold")
-    ax.set_xlabel("")
+    apply_axis_style(ax, title=title, xlabel="")
     ax.tick_params(axis="x", rotation=25)
     _save_figure(fig, pdf_path, png_path)
     plt.close(fig)
+
+
+def _node_color_values(node_table: pd.DataFrame, column: str) -> pd.Series:
+    values_raw = node_table.get(column)
+    if values_raw is None:
+        return pd.Series(np.zeros(len(node_table)), index=node_table.index, dtype=float)
+    if values_raw.dtype == object or str(values_raw.dtype).startswith("string"):
+        categories = pd.Categorical(values_raw.astype("string").fillna("unknown"))
+        return pd.Series(categories.codes, index=node_table.index, dtype=float)
+    return pd.to_numeric(values_raw, errors="coerce").fillna(0.0)
 
 
 def _graph_network_figure(result: dict[str, Any], color_column: str, title: str, pdf_path: Path, png_path: Path) -> None:
@@ -369,18 +388,21 @@ def _graph_network_figure(result: dict[str, Any], color_column: str, title: str,
 
     layout = nx.spring_layout(nx_graph, seed=42)
     node_table = result["node_table"].set_index("node_id")
-    values = pd.to_numeric(node_table.get(color_column), errors="coerce").fillna(0.0)
-    nx.draw_networkx_edges(nx_graph, layout, ax=ax, edge_color="#a8b3c1", width=1.0, alpha=0.7)
+    values = _node_color_values(node_table, color_column)
+    nx.draw_networkx_edges(nx_graph, layout, ax=ax, edge_color="#c7d2df", width=1.0, alpha=0.8)
     nodes = nx.draw_networkx_nodes(
         nx_graph,
         layout,
         ax=ax,
         node_color=values.reindex(list(nx_graph.nodes())).fillna(0.0).to_numpy(dtype=float),
-        cmap="viridis",
+        cmap="cividis",
+        linewidths=0.9,
+        edgecolors="#ffffff",
         node_size=(pd.to_numeric(node_table["n_members"], errors="coerce").reindex(list(nx_graph.nodes())).fillna(1.0) * 16).to_numpy(),
     )
-    fig.colorbar(nodes, ax=ax, label=color_column)
-    ax.set_title(title, loc="left", fontsize=14, fontweight="bold")
+    cbar = fig.colorbar(nodes, ax=ax)
+    style_colorbar(cbar, color_column)
+    apply_axis_style(ax, title=title)
     ax.axis("off")
     _save_figure(fig, pdf_path, png_path)
     plt.close(fig)
@@ -398,13 +420,19 @@ def _lens_scatter_sources(result: dict[str, Any], pdf_path: Path, png_path: Path
     imputed = frame[source_cols].apply(pd.to_numeric, errors="coerce").fillna(0).any(axis=1) if source_cols else pd.Series(False, index=frame.index)
     derived = frame[derived_cols].apply(pd.to_numeric, errors="coerce").fillna(0).any(axis=1) if derived_cols else pd.Series(False, index=frame.index)
     status = np.where(imputed, "imputed", np.where(derived, "physically_derived", "observed"))
-    palette = {"observed": "#0f4c5c", "physically_derived": "#e36414", "imputed": "#8d99ae"}
     for label in ["observed", "physically_derived", "imputed"]:
         mask = status == label
-        ax.scatter(frame.loc[mask, "lens_x"], frame.loc[mask, "lens_y"], s=22, alpha=0.7, label=label, color=palette[label])
-    ax.set_title(pdf_path.stem, loc="left", fontsize=14, fontweight="bold")
-    ax.set_xlabel("lens_1")
-    ax.set_ylabel("lens_2")
+        ax.scatter(
+            frame.loc[mask, "lens_x"],
+            frame.loc[mask, "lens_y"],
+            s=24,
+            alpha=0.74,
+            label=label,
+            color=SOURCE_PALETTE[label],
+            edgecolors="#ffffff",
+            linewidths=0.35,
+        )
+    apply_axis_style(ax, title=pdf_path.stem, xlabel="lens_1", ylabel="lens_2")
     ax.legend()
     _save_figure(fig, pdf_path, png_path)
     plt.close(fig)
@@ -420,9 +448,7 @@ def _node_feature_profiles(result: dict[str, Any], pdf_path: Path, png_path: Pat
     plt = _import_matplotlib()
     fig, ax = plt.subplots(figsize=(12, 7))
     top.T.plot(ax=ax)
-    ax.set_title(pdf_path.stem, loc="left", fontsize=14, fontweight="bold")
-    ax.set_xlabel("feature")
-    ax.set_ylabel("mean physical value")
+    apply_axis_style(ax, title=pdf_path.stem, xlabel="feature", ylabel="mean physical value")
     _save_figure(fig, pdf_path, png_path)
     plt.close(fig)
 
@@ -448,7 +474,14 @@ def write_figures(batch_result: dict[str, Any], outputs_dir: Path) -> dict[str, 
         png_path = tree["figures_png"] / filename.replace(".pdf", ".png")
         func(*args, pdf_path, png_path)
         paths[pdf_path.stem] = pdf_path
-    _message_figure(tree["figures_pdf"] / "08_mapper_imputation_method_sensitivity.pdf", "Imputation method sensitivity", "This run did not compute multi-method Mapper comparisons. See mapper_input_availability.csv for available inputs.", tree["figures_png"] / "08_mapper_imputation_method_sensitivity.png")
+    imputation_pdf = tree["figures_pdf"] / "08_mapper_imputation_method_sensitivity.pdf"
+    _message_figure(
+        imputation_pdf,
+        "Imputation method sensitivity",
+        "This run did not compute multi-method Mapper comparisons. See mapper_input_availability.csv for available inputs.",
+        tree["figures_png"] / "08_mapper_imputation_method_sensitivity.png",
+    )
+    paths[imputation_pdf.stem] = imputation_pdf
 
     principal_results = [result for result in batch_result["results"] if result["config"].lens == "pca2"]
     for result in principal_results:
@@ -511,13 +544,27 @@ def write_interpretation_figures(
 
     orbital = result_lookup.get("orbital_pca2_cubes10_overlap0p35")
     if orbital is not None:
-        _graph_network_figure(orbital, "degree", "Orbital mapper interpretation", tree["figures_interpretation_pdf"] / "04_orbital_mapper_interpretation.pdf", tree["figures_interpretation_png"] / "04_orbital_mapper_interpretation.png")
+        _graph_network_figure(
+            orbital,
+            "orbit_class_top",
+            "Orbital mapper interpretation",
+            tree["figures_interpretation_pdf"] / "04_orbital_mapper_interpretation.pdf",
+            tree["figures_interpretation_png"] / "04_orbital_mapper_interpretation.png",
+        )
+        paths["04_orbital_mapper_interpretation"] = tree["figures_interpretation_pdf"] / "04_orbital_mapper_interpretation.pdf"
     else:
         _message_figure(tree["figures_interpretation_pdf"] / "04_orbital_mapper_interpretation.pdf", "Orbital mapper interpretation", "Orbital graph not available.", tree["figures_interpretation_png"] / "04_orbital_mapper_interpretation.png")
 
     joint = result_lookup.get("joint_pca2_cubes10_overlap0p35")
     if joint is not None:
-        _graph_network_figure(joint, "mean_imputation_fraction", "Joint mapper interpretation", tree["figures_interpretation_pdf"] / "05_joint_mapper_interpretation.pdf", tree["figures_interpretation_png"] / "05_joint_mapper_interpretation.png")
+        _graph_network_figure(
+            joint,
+            "candidate_population_top",
+            "Joint mapper interpretation",
+            tree["figures_interpretation_pdf"] / "05_joint_mapper_interpretation.pdf",
+            tree["figures_interpretation_png"] / "05_joint_mapper_interpretation.png",
+        )
+        paths["05_joint_mapper_interpretation"] = tree["figures_interpretation_pdf"] / "05_joint_mapper_interpretation.pdf"
     else:
         _message_figure(tree["figures_interpretation_pdf"] / "05_joint_mapper_interpretation.pdf", "Joint mapper interpretation", "Joint graph not available.", tree["figures_interpretation_png"] / "05_joint_mapper_interpretation.png")
 
@@ -596,12 +643,38 @@ def write_presentation_figures(batch_result: dict[str, Any], outputs_dir: Path, 
     return paths
 
 
+def _latex_escape(text: str) -> str:
+    return text.replace("_", r"\_")
+
+
+def _latex_inline_code(text: str) -> str:
+    def repl(match: re.Match[str]) -> str:
+        return r"\texttt{" + _latex_escape(match.group(1)) + "}"
+
+    return re.sub(r"`([^`]+)`", repl, text)
+
+
+def _latexize_summary_text(text: str) -> str:
+    return _latex_inline_code(text).replace("beta_1", r"\(\beta_1\)")
+
+
 def _write_table_tex(frame: pd.DataFrame, path: Path, caption: str, max_rows: int = 10) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if frame.empty:
         path.write_text("% No data available.\n", encoding="utf-8")
         return
-    latex = frame.head(max_rows).to_latex(index=False, escape=True, longtable=False, caption=caption, label=f"tab:{path.stem}", float_format="%.3f", na_rep="NA")
+    latex = frame.head(max_rows).to_latex(
+        index=False,
+        escape=True,
+        longtable=False,
+        caption=caption,
+        label=f"tab:{path.stem}",
+        float_format="%.3f",
+        na_rep="NA",
+    )
+    latex = latex.replace(r"\begin{table}", "\\begin{table}[p]\n\\centering", 1)
+    latex = latex.replace(r"\begin{tabular}", "\\begin{adjustbox}{max width=\\linewidth}\n\\begin{tabular}", 1)
+    latex = latex.replace(r"\end{tabular}", "\\end{tabular}\n\\end{adjustbox}", 1)
     path.write_text(latex, encoding="utf-8")
 
 
@@ -635,6 +708,9 @@ def write_latex_report(batch_result: dict[str, Any], outputs_dir: Path, latex_di
             validation_outputs.get("imputation_method_mapper_comparison"),
         ),
     )
+    density_text = _latexize_summary_text(summary.get("density_sensitivity", "Not available."))
+    lens_text = _latexize_summary_text(summary.get("lens_sensitivity", "Not available."))
+    global_summary = _latexize_summary_text(summary.get("global_summary", "No global summary available."))
 
     for figure in (outputs_dir / "figures_pdf").glob("*.pdf"):
         shutil.copyfile(figure, figures_dir / figure.name)
@@ -673,7 +749,7 @@ def write_latex_report(batch_result: dict[str, Any], outputs_dir: Path, latex_di
             "Usamos $\\beta_1 = E - V + C$ con $C=\\beta_0$. Las etiquetas fisicas de planetas son resumentes heuristicas, no taxonomias confirmadas."
         ),
         "05_mapper_results.tex": (
-            f"{summary.get('global_summary', 'No global summary available.')} "
+            f"{global_summary} "
             "\\begin{figure}[H]\\centering\\includegraphics[width=0.95\\linewidth]{figures/01_mapper_graph_size_complexity.pdf}\\caption{Tamano y complejidad de los grafos Mapper.}\\end{figure}"
             "\\begin{figure}[H]\\centering\\includegraphics[width=0.95\\linewidth]{figures/02_mapper_metrics_zscore_heatmap.pdf}\\caption{Heatmap de metricas estandarizadas.}\\end{figure}"
             "\\begin{figure}[H]\\centering\\includegraphics[width=0.75\\linewidth]{figures/04_mapper_nodes_vs_cycles.pdf}\\caption{Relacion entre numero de nodos y ciclos.}\\end{figure}"
@@ -698,7 +774,7 @@ def write_latex_report(batch_result: dict[str, Any], outputs_dir: Path, latex_di
             "\\begin{figure}[H]\\centering\\includegraphics[width=0.95\\linewidth]{figures/12_null_model_beta1.pdf}\\caption{Diagnostico de modelo nulo para beta_1.}\\end{figure}"
         ),
         "10_sensitivity_analysis.tex": (
-            f"{summary.get('density_sensitivity', 'Not available.')} {summary.get('lens_sensitivity', 'Not available.')} "
+            f"{density_text} {lens_text} "
             "\\begin{figure}[H]\\centering\\includegraphics[width=0.9\\linewidth]{figures/06_mapper_density_feature_sensitivity.pdf}\\caption{Sensibilidad al agregar pl\\_dens.}\\end{figure}"
             "\\begin{figure}[H]\\centering\\includegraphics[width=0.9\\linewidth]{figures/07_mapper_lens_sensitivity.pdf}\\caption{Sensibilidad al lens.}\\end{figure}"
             "\\begin{figure}[H]\\centering\\includegraphics[width=0.9\\linewidth]{figures/11_imputation_method_comparison.pdf}\\caption{Comparacion entre metodos de imputacion cuando esta disponible.}\\end{figure}"
@@ -730,6 +806,8 @@ def write_latex_report(batch_result: dict[str, Any], outputs_dir: Path, latex_di
 \usepackage{longtable}
 \usepackage{array}
 \usepackage{placeins}
+\usepackage{pdflscape}
+\usepackage{adjustbox}
 \title{Mapper/TDA Report for Imputed PSCompPars}
 \date{}
 \begin{document}
@@ -760,6 +838,9 @@ def write_latex_report(batch_result: dict[str, Any], outputs_dir: Path, latex_di
 \section{Conclusion}
 \input{sections/12_conclusion.tex}
 \FloatBarrier
+\clearpage
+\begin{landscape}
+\footnotesize
 \input{tables/mapper_graph_metrics_summary.tex}
 \input{tables/mapper_space_comparison.tex}
 \input{tables/mapper_density_sensitivity.tex}
@@ -767,10 +848,17 @@ def write_latex_report(batch_result: dict[str, Any], outputs_dir: Path, latex_di
 \input{tables/mapper_imputation_audit_summary.tex}
 \input{tables/main_graph_selection_summary.tex}
 \input{tables/component_summary_short.tex}
+\end{landscape}
 \end{document}
 """
     report_path = latex_dir / "mapper_report.tex"
     report_path.write_text(report_body, encoding="utf-8")
-    (latex_dir / "README.md").write_text("Compila con `pdflatex mapper_report.tex` o `xelatex mapper_report.tex`.\n", encoding="utf-8")
-    (latex_dir / "Makefile").write_text("all:\n\tpdflatex mapper_report.tex\n\tpdflatex mapper_report.tex\n", encoding="utf-8")
+    (latex_dir / "README.md").write_text(
+        "Compila con `latexmk -pdf -interaction=nonstopmode -halt-on-error mapper_report.tex`.\n",
+        encoding="utf-8",
+    )
+    (latex_dir / "Makefile").write_text(
+        "all:\n\tlatexmk -pdf -interaction=nonstopmode -halt-on-error mapper_report.tex\n",
+        encoding="utf-8",
+    )
     return {"mapper_report_tex": report_path}

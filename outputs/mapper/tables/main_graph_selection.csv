@@ -1,0 +1,7 @@
+config_id,reason_for_selection,interpretation_priority,caution_level,n_nodes,n_edges,beta_1,mean_node_imputation_fraction,frac_nodes_high_imputation,mean_node_physically_derived_fraction
+phys_min_pca2_cubes10_overlap0p35,Control masa-radio sin densidad derivada.,primary,low,66,105,54,0.017370253623123333,0.030303030303030304,0.0
+phys_density_pca2_cubes10_overlap0p35,Mide el efecto de agregar densidad derivada.,control,moderate,67,102,52,0.001837022418032922,0.0,0.33242662843303494
+orbital_pca2_cubes10_overlap0p35,Espacio orbital con baja imputacion y alta prioridad interpretativa.,primary,low,124,196,96,0.011199827665987988,0.008064516129032258,0.02768533488517559
+joint_no_density_pca2_cubes10_overlap0p35,Espacio conjunto sin densidad derivada redundante.,primary,moderate,62,134,81,0.17570100807987993,0.3548387096774194,0.007711050247016595
+joint_pca2_cubes10_overlap0p35,Espacio conjunto completo para comparar el efecto de pl_dens.,control,moderate,56,126,77,0.1517948531939548,0.14285714285714285,0.14787059472415207
+thermal_pca2_cubes10_overlap0p35,"Alta complejidad, pero interpretacion debilitada por imputacion.",cautionary,high,121,150,67,0.5875030401169343,0.71900826446281,0.0

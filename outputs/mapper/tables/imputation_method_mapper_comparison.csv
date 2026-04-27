@@ -1,0 +1,17 @@
+input_method,config_id,space,lens,n_nodes,n_edges,beta_0,beta_1,mean_node_imputation_fraction,largest_component_fraction
+iterative,phys_min_pca2_cubes10_overlap0p35,phys_min,pca2,66,105,15,54,0.017370253623123333,0.5
+iterative,orbital_pca2_cubes10_overlap0p35,orbital,pca2,124,196,24,96,0.011199827665987988,0.5
+iterative,joint_no_density_pca2_cubes10_overlap0p35,joint_no_density,pca2,62,134,9,81,0.17570100807987993,0.7580645161290323
+iterative,joint_pca2_cubes10_overlap0p35,joint,pca2,56,126,7,77,0.1517948531939548,0.7142857142857143
+knn,phys_min_pca2_cubes10_overlap0p35,phys_min,pca2,67,98,18,49,0.011084524743415494,0.43283582089552236
+knn,orbital_pca2_cubes10_overlap0p35,orbital,pca2,64,79,21,36,0.04257442754756265,0.296875
+knn,joint_no_density_pca2_cubes10_overlap0p35,joint_no_density,pca2,58,124,7,73,0.15009091322618626,0.8620689655172413
+knn,joint_pca2_cubes10_overlap0p35,joint,pca2,74,156,9,91,0.1527980607944247,0.7837837837837838
+median,phys_min_pca2_cubes10_overlap0p35,phys_min,pca2,76,113,21,58,0.059979562931614216,0.42105263157894735
+median,orbital_pca2_cubes10_overlap0p35,orbital,pca2,78,69,33,24,0.08979815970585533,0.19230769230769232
+median,joint_no_density_pca2_cubes10_overlap0p35,joint_no_density,pca2,89,153,20,84,0.15120366344884653,0.5617977528089888
+median,joint_pca2_cubes10_overlap0p35,joint,pca2,91,170,16,95,0.16815759955684334,0.5714285714285714
+complete_case,phys_min_pca2_cubes10_overlap0p35,phys_min,pca2,50,98,8,56,0.0,0.82
+complete_case,orbital_pca2_cubes10_overlap0p35,orbital,pca2,87,132,22,67,0.0,0.40229885057471265
+complete_case,joint_no_density_pca2_cubes10_overlap0p35,joint_no_density,pca2,74,167,8,101,0.0,0.7702702702702703
+complete_case,joint_pca2_cubes10_overlap0p35,joint,pca2,66,157,7,98,0.0,0.8333333333333334

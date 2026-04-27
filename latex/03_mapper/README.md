@@ -1,1 +1,1 @@
-Compila con `pdflatex mapper_report.tex` o `xelatex mapper_report.tex`.
+Compila con `latexmk -pdf -interaction=nonstopmode -halt-on-error mapper_report.tex`.

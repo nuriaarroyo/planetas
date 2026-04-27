@@ -11,6 +11,8 @@
 \usepackage{longtable}
 \usepackage{array}
 \usepackage{placeins}
+\usepackage{pdflscape}
+\usepackage{adjustbox}
 \title{Mapper/TDA Report for Imputed PSCompPars}
 \date{}
 \begin{document}
@@ -41,6 +43,9 @@
 \section{Conclusion}
 \input{sections/12_conclusion.tex}
 \FloatBarrier
+\clearpage
+\begin{landscape}
+\footnotesize
 \input{tables/mapper_graph_metrics_summary.tex}
 \input{tables/mapper_space_comparison.tex}
 \input{tables/mapper_density_sensitivity.tex}
@@ -48,4 +53,5 @@
 \input{tables/mapper_imputation_audit_summary.tex}
 \input{tables/main_graph_selection_summary.tex}
 \input{tables/component_summary_short.tex}
+\end{landscape}
 \end{document}
