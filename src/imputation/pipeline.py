@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from matplotlib.colors import LinearSegmentedColormap
 
 from feature_config import (
     IDENTIFIER_COLUMNS,
@@ -30,7 +31,7 @@ from imputation.steps.knn_imputer import impute_with_knn
 from imputation.steps.log_transform import apply_log10_transform, invert_log10_transform, log_feature_subset
 from imputation.steps.physical_derivation import PhysicalDerivationAudit, apply_physical_derivations
 from imputation.steps.scaling import invert_robust_scale, robust_scale
-from visual_style import SOURCE_PALETTE, apply_axis_style, configure_matplotlib, style_colorbar
+from visual_style import PROJECT_COLOR_CYCLE, SOURCE_PALETTE, apply_axis_style, configure_matplotlib, style_colorbar
 
 
 VALID_METHODS = ("median", "knn", "iterative", "compare")
@@ -44,6 +45,10 @@ SCATTER_SPECS = [
     ("pl_orbper", "pl_orbsmax", "scatter_orbper_orbsmax", "Orbital period vs semimajor axis"),
     ("pl_insol", "pl_eqt", "scatter_insol_eqt", "Insolation vs equilibrium temperature"),
 ]
+PROJECT_DIVERGING_CMAP = LinearSegmentedColormap.from_list(
+    "planetas_diverging",
+    ["#dc2626", "#f8fafc", "#2563eb"],
+)
 
 
 @dataclass(frozen=True)
@@ -1426,6 +1431,29 @@ def _import_matplotlib_pyplot():
     return plt
 
 
+def _series_color(label: object, index: int) -> str:
+    key = str(label)
+    semantic = {
+        "observed": SOURCE_PALETTE["observed"],
+        "physically_derived": SOURCE_PALETTE["physically_derived"],
+        "imputed": SOURCE_PALETTE["imputed"],
+        "raw CSV": "#475569",
+        "after physical derivation": SOURCE_PALETTE["physically_derived"],
+        "before": "#475569",
+        "after": SOURCE_PALETTE["observed"],
+        "mean_mae_rank": "#2563eb",
+        "mean_rmse_rank": "#0891b2",
+        "median": "#475569",
+        "knn": "#0f766e",
+        "iterative": "#2563eb",
+    }
+    return semantic.get(key, SOURCE_PALETTE.get(key, PROJECT_COLOR_CYCLE[index % len(PROJECT_COLOR_CYCLE)]))
+
+
+def _column_colors(columns: pd.Index) -> list[str]:
+    return [_series_color(label, idx) for idx, label in enumerate(columns)]
+
+
 def _save_pdf(fig: Any, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
@@ -1451,7 +1479,7 @@ def _grouped_bar_pdf(df: pd.DataFrame, x: str, y: str, hue: str, title: str, yla
     plt = _import_matplotlib_pyplot()
     pivot = df.pivot_table(index=x, columns=hue, values=y, aggfunc="mean").fillna(0)
     fig, ax = plt.subplots(figsize=(13, 7))
-    pivot.plot(kind="bar", ax=ax, width=0.82)
+    pivot.plot(kind="bar", ax=ax, width=0.82, color=_column_colors(pivot.columns))
     apply_axis_style(ax, title=title, xlabel="", ylabel=ylabel)
     ax.tick_params(axis="x", labelrotation=25)
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=min(4, max(1, len(pivot.columns))))
@@ -1466,7 +1494,7 @@ def _stacked_bar_pdf(df: pd.DataFrame, x: str, y: str, hue: str, title: str, yla
     plt = _import_matplotlib_pyplot()
     pivot = df.pivot_table(index=x, columns=hue, values=y, aggfunc="sum").fillna(0)
     fig, ax = plt.subplots(figsize=(13, 7))
-    pivot.plot(kind="bar", stacked=True, ax=ax, width=0.82)
+    pivot.plot(kind="bar", stacked=True, ax=ax, width=0.82, color=_column_colors(pivot.columns))
     apply_axis_style(ax, title=title, xlabel="", ylabel=ylabel)
     ax.tick_params(axis="x", labelrotation=25)
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=min(4, max(1, len(pivot.columns))))
@@ -1485,7 +1513,7 @@ def _validation_spearman_pdf(metrics: pd.DataFrame, path: Path) -> None:
         return
     plt = _import_matplotlib_pyplot()
     fig, ax = plt.subplots(figsize=(12, 6))
-    image = ax.imshow(pivot.values, vmin=-1, vmax=1, cmap="RdBu_r", aspect="auto")
+    image = ax.imshow(pivot.values, vmin=-1, vmax=1, cmap=PROJECT_DIVERGING_CMAP, aspect="auto")
     apply_axis_style(ax, title=title)
     ax.set_xticks(range(len(pivot.columns)), labels=pivot.columns, rotation=30, ha="right")
     ax.set_yticks(range(len(pivot.index)), labels=pivot.index)
