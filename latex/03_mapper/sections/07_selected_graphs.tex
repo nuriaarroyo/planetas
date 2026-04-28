@@ -1,0 +1,93 @@
+La selección de grafos no se hizo como una búsqueda de ``los seis mejores'' sin contexto, sino como una selección metodológica para cubrir las principales capas del análisis: física, orbital, conjunta y térmica. Además, se incluyeron controles explícitos para evaluar el efecto de agregar \texttt{pl\_dens}, una variable físicamente útil pero dependiente de masa y radio en gran parte del catálogo.
+
+Todos los grafos seleccionados pertenecen a la capa \texttt{pca2}, que es la capa activa de interpretación del reporte. Dentro de esta capa se eligieron tres tipos de grafos. Los grafos primarios son los que sostienen la interpretación central del análisis. Los grafos de control permiten comparar qué cambia al agregar densidad. El grafo \textit{cautionary} se conserva porque muestra estructura, pero su dependencia de imputación limita la fuerza de cualquier conclusión física directa.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{p{0.42\textwidth}p{0.17\textwidth}p{0.31\textwidth}}
+\toprule
+\textbf{Grafo} & \textbf{Rol} & \textbf{Función en el análisis} \\
+\midrule
+\texttt{phys\_min\_pca2\_cubes10\_overlap0p35} 
+& Primario 
+& Señal física masa-radio sin densidad derivada. \\
+
+\texttt{phys\_density\_pca2\_cubes10\_overlap0p35} 
+& Control 
+& Efecto de agregar \texttt{pl\_dens} al espacio físico. \\
+
+\texttt{orbital\_pca2\_cubes10\_overlap0p35} 
+& Primario principal 
+& Estructura orbital con alta complejidad y baja imputación. \\
+
+\texttt{joint\_no\_density\_pca2\_cubes10\_overlap0p35} 
+& Primario 
+& Señal combinada física, orbital y térmica sin densidad. \\
+
+\texttt{joint\_pca2\_cubes10\_overlap0p35} 
+& Control 
+& Efecto de agregar densidad al espacio conjunto. \\
+
+\texttt{thermal\_pca2\_cubes10\_overlap0p35} 
+& Cautionary 
+& Señal térmica estructurada, pero con alta imputación. \\
+\bottomrule
+\end{tabular}
+\caption{Roles metodológicos de los grafos \texttt{pca2} seleccionados.}
+\label{tab:selected_graph_roles}
+\end{table}
+
+\subsection*{Grafo físico mínimo: \texttt{phys\_min}}
+
+El grafo \texttt{phys\_min\_pca2\_cubes10\_overlap0p35} usa únicamente \texttt{pl\_rade} y \texttt{pl\_bmasse}. Por ello funciona como el mapa físico más directo del proyecto: compara planetas según tamaño y masa, sin introducir densidad derivada.
+
+Este grafo tiene 66 nodos, 105 aristas, $\beta_0=15$ y $\beta_1=54$, con una imputación media nodal de 0.017. Estos valores indican una estructura moderada en el espacio masa-radio, sostenida por baja imputación. La interpretación razonable es que el grafo contiene regiones físicamente informativas relacionadas con escala planetaria, como transiciones entre planetas pequeños, sub-Neptunos y gigantes.
+
+Sin embargo, sería demasiado fuerte afirmar que este grafo descubre clases físicas definitivas. Su papel es más prudente: ofrecer una referencia física básica contra la cual comparar espacios más complejos.
+
+\subsection*{Grafo físico con densidad: \texttt{phys\_density}}
+
+El grafo \texttt{phys\_density\_pca2\_cubes10\_overlap0p35} usa \texttt{pl\_rade}, \texttt{pl\_bmasse} y \texttt{pl\_dens}. Tiene 67 nodos, 102 aristas, $\beta_0=17$ y $\beta_1=52$, con una imputación media nodal de 0.002. Aunque esta imputación es baja, el grafo debe interpretarse con cuidado porque la densidad fue derivada físicamente para una parte importante del catálogo. En este resultado, la fracción derivada media asociada al grafo es 0.332.
+
+Comparado con \texttt{phys\_min}, agregar densidad reduce ligeramente la complejidad topológica, de $\beta_1=54$ a $\beta_1=52$. Esta diferencia sugiere que \texttt{pl\_dens} no introduce una nueva ramificación fuerte en el espacio físico. Más bien, parece ordenar o compactar ligeramente la geometría masa-radio.
+
+Por esta razón, \texttt{phys\_density} se interpreta como un control metodológico. Es útil para evaluar el efecto de incluir densidad, pero no debe leerse como evidencia completamente independiente de masa y radio.
+
+\subsection*{Grafo orbital: \texttt{orbital}}
+
+El grafo \texttt{orbital\_pca2\_cubes10\_overlap0p35} es el candidato principal del reporte. Usa \texttt{pl\_orbper} y \texttt{pl\_orbsmax}, es decir, periodo orbital y semieje mayor. Estas variables resumen la escala orbital del planeta: cuánto tarda en orbitar y a qué distancia media se encuentra de su estrella.
+
+Este grafo tiene 124 nodos, 196 aristas, $\beta_0=24$ y $\beta_1=96$, con una imputación media nodal de 0.011. Es el grafo seleccionado con mayor complejidad topológica y, al mismo tiempo, mantiene baja dependencia de imputación. Esta combinación lo convierte en el resultado más prometedor para inspección científica.
+
+La interpretación razonable es que el espacio orbital contiene estructura exploratoria fuerte, compatible con organización por escala orbital o arquitectura del sistema. No obstante, esta lectura debe mantenerse cautelosa. Un $\beta_1$ alto no prueba por sí solo una estructura física real, y la auditoría posterior muestra que el grafo orbital también tiene asociación con \texttt{discoverymethod}. Por tanto, el grafo orbital es informativo, pero no debe interpretarse como la topología real de los exoplanetas.
+
+\subsection*{Grafo conjunto sin densidad: \texttt{joint\_no\_density}}
+
+El grafo \texttt{joint\_no\_density\_pca2\_cubes10\_overlap0p35} combina variables físicas, orbitales y térmicas sin incluir densidad. Sus variables son \texttt{pl\_rade}, \texttt{pl\_bmasse}, \texttt{pl\_orbper}, \texttt{pl\_orbsmax}, \texttt{pl\_insol} y \texttt{pl\_eqt}. Este espacio permite preguntar cómo se organiza el catálogo cuando se combinan propiedades corporales, orbitales y energéticas.
+
+El grafo tiene 62 nodos, 134 aristas, $\beta_0=9$ y $\beta_1=81$, con una imputación media nodal de 0.176. Su complejidad es alta, pero su riesgo de imputación es mayor que el de los espacios físico mínimo y orbital. Esto ocurre porque incorpora variables térmicas, especialmente \texttt{pl\_insol} y \texttt{pl\_eqt}, que son más incompletas.
+
+La lectura razonable es que \texttt{joint\_no\_density} identifica regiones mixtas útiles para inspección, donde las propiedades físicas, orbitales y térmicas interactúan. La lectura demasiado fuerte sería tratarlo como el mapa completo de la diversidad exoplanetaria. Su valor está en integrar perspectivas, pero con una cautela mayor por imputación.
+
+\subsection*{Grafo conjunto con densidad: \texttt{joint}}
+
+El grafo \texttt{joint\_pca2\_cubes10\_overlap0p35} agrega \texttt{pl\_dens} al espacio conjunto. Sus variables son \texttt{pl\_rade}, \texttt{pl\_bmasse}, \texttt{pl\_dens}, \texttt{pl\_orbper}, \texttt{pl\_orbsmax}, \texttt{pl\_insol} y \texttt{pl\_eqt}. Este grafo tiene 56 nodos, 126 aristas, $\beta_0=7$ y $\beta_1=77$, con una imputación media nodal de 0.152.
+
+Comparado con \texttt{joint\_no\_density}, agregar densidad reduce el número de nodos y ciclos. En particular, $\beta_1$ baja de 81 a 77. Esto sugiere que la densidad compacta o regulariza parte del espacio conjunto, en lugar de generar una estructura adicional más compleja.
+
+Este resultado refuerza la idea de que \texttt{pl\_dens} debe tratarse como control. No se puede decir simplemente que agregar densidad mejora el análisis, porque la densidad aporta información físicamente relevante, pero también introduce dependencia algebraica con masa y radio.
+
+\subsection*{Grafo térmico: \texttt{thermal}}
+
+El grafo \texttt{thermal\_pca2\_cubes10\_overlap0p35} usa \texttt{pl\_insol} y \texttt{pl\_eqt}. Estas variables describen el ambiente energético del planeta: cuánta radiación recibe y cuál sería su temperatura de equilibrio.
+
+Este grafo tiene 121 nodos, 150 aristas, $\beta_0=38$ y $\beta_1=67$. A primera vista, esto indica una estructura topológica visible. Sin embargo, la imputación media nodal es 0.588 y la fracción de nodos con alta imputación es 0.719. Por esta razón, el grafo térmico se clasifica como \textit{cautionary}.
+
+La interpretación razonable es que el espacio térmico puede sugerir gradientes energéticos o regiones asociadas con temperatura e insolación, pero su alta dependencia de imputación impide tratarlo como evidencia física fuerte. Afirmar que la estructura térmica refleja poblaciones reales sería sobreinterpretar el resultado.
+
+\subsection*{Lectura conjunta de la selección}
+
+En conjunto, la selección de grafos cubre tres capas interpretativas principales. El grafo físico mínimo ofrece una referencia masa-radio de baja imputación. El grafo orbital es el candidato más prometedor porque combina alta complejidad topológica con baja imputación. El grafo conjunto sin densidad permite observar interacciones entre propiedades físicas, orbitales y térmicas. Los grafos con densidad funcionan como controles para evaluar el efecto de una variable derivada, mientras que el grafo térmico actúa como advertencia metodológica: una estructura puede ser visualmente compleja y, aun así, estar debilitada por alta imputación.
+
+Por lo tanto, la selección no busca declarar una jerarquía absoluta entre grafos, sino construir una base de comparación. El criterio central no es solo cuánta estructura tiene un grafo, sino qué tan defendible es esa estructura cuando se consideran imputación, derivaciones físicas, sensibilidad metodológica y sesgo observacional.

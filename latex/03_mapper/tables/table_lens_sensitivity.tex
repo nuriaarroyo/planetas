@@ -1,0 +1,36 @@
+\begin{table}[H]
+\centering
+\scriptsize
+\caption{Sensibilidad por lens usando todos los artefactos existentes.}
+\label{tab:lens_sensitivity}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{llrrrr}
+\toprule
+feature\_space & lens & n\_nodes & n\_edges & beta\_1 & mean\_node\_imputation \\
+\midrule
+joint & density & 117 & 260 & 153 & 0.106 \\
+joint & domain & 64 & 116 & 59 & 0.121 \\
+joint & pca2 & 56 & 126 & 77 & 0.152 \\
+joint\_no\_density & density & 109 & 233 & 134 & 0.142 \\
+joint\_no\_density & domain & 9 & 0 & 0 & 0.212 \\
+joint\_no\_density & pca2 & 62 & 134 & 81 & 0.176 \\
+orb\_thermal & density & 121 & 246 & 138 & 0.255 \\
+orb\_thermal & domain & 56 & 82 & 38 & 0.254 \\
+orb\_thermal & pca2 & 58 & 100 & 54 & 0.347 \\
+orbital & density & 178 & 297 & 144 & 0.030 \\
+orbital & domain & 77 & 94 & 42 & 0.034 \\
+orbital & pca2 & 124 & 196 & 96 & 0.011 \\
+phys\_density & density & 78 & 109 & 52 & 0.002 \\
+phys\_density & domain & 80 & 132 & 68 & 0.010 \\
+phys\_density & pca2 & 67 & 102 & 52 & 0.002 \\
+phys\_min & density & 97 & 152 & 75 & 0.010 \\
+phys\_min & domain & 76 & 125 & 64 & 0.010 \\
+phys\_min & pca2 & 66 & 105 & 54 & 0.017 \\
+thermal & density & 205 & 338 & 171 & 0.472 \\
+thermal & domain & 95 & 105 & 48 & 0.527 \\
+thermal & pca2 & 121 & 150 & 67 & 0.588 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+
+\end{table}

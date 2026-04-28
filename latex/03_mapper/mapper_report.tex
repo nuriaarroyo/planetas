@@ -1,4 +1,6 @@
 \documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
 \usepackage{booktabs}
@@ -13,47 +15,49 @@
 \usepackage{placeins}
 \usepackage{pdflscape}
 \usepackage{adjustbox}
-\title{Mapper/TDA Report for Imputed PSCompPars}
+\usepackage{url}
+
+\title{Reporte Mapper/TDA de exoplanetas PSCompPars imputados}
+\author{}
 \date{}
+
 \begin{document}
 \maketitle
 \input{sections/00_abstract.tex}
-\section{Introduction}
+\newpage
+\section{Resumen ejecutivo}
+\input{sections/00b_executive_resumen.tex}
+\newpage
+\section{Introduccion y pregunta de investigacion}
 \input{sections/01_introduction.tex}
-\section{Data and Imputation}
-\input{sections/02_data_and_imputation.tex}
-\section{Key Findings}
-\input{sections/03_key_findings.tex}
-\section{Mapper Methodology}
+\section{Contexto astrofisico y variables}
+\input{sections/02_astrophysical_context.tex}
+\section{Datos, imputacion y cantidades derivadas}
+\input{sections/03_data_and_imputation.tex}
+\section{Metodologia Mapper}
 \input{sections/04_mapper_methodology.tex}
-\section{Results}
-\input{sections/05_mapper_results.tex}
-\section{Node-Level Interpretation}
-\input{sections/06_node_level_interpretation.tex}
-\section{Main Graph Interpretation}
-\input{sections/07_main_graph_interpretation.tex}
-\section{Stability Diagnostics}
-\input{sections/08_stability_diagnostics.tex}
-\section{Null Model Diagnostics}
-\input{sections/09_null_model_diagnostics.tex}
-\section{Sensitivity Analysis}
-\input{sections/10_sensitivity_analysis.tex}
-\section{Limitations}
-\input{sections/11_limitations.tex}
+\section{Reconciliacion de salidas y reproducibilidad}
+\input{sections/05_output_reconciliation.tex}
+\section{Resultados principales de Mapper}
+\input{sections/06_mapper_results.tex}
+\section{Interpretacion de grafos seleccionados}
+\input{sections/07_selected_graphs.tex}
+\section{Interpretacion astrofisica}
+\input{sections/08_astrophysical_interpretation.tex}
+\section{Auditoria de sesgo observacional}
+\input{sections/09_observational_bias_audit.tex}
+\section{Prueba nula por permutacion de discoverymethod}
+\input{sections/10_permutation_null_test.tex}
+\section{Sintesis final de regiones}
+\input{sections/11_region_synthesis.tex}
+\section{Limitaciones}
+\input{sections/12_limitations.tex}
 \section{Conclusion}
-\input{sections/12_conclusion.tex}
-\section{Opinion}
-\input{sections/13_opinion.tex}
+\input{sections/13_conclusion.tex}
 \FloatBarrier
 \clearpage
 \begin{landscape}
-\footnotesize
-\input{tables/mapper_graph_metrics_summary.tex}
-\input{tables/mapper_space_comparison.tex}
-\input{tables/mapper_density_sensitivity.tex}
-\input{tables/mapper_lens_sensitivity.tex}
-\input{tables/mapper_imputation_audit_summary.tex}
-\input{tables/main_graph_selection_summary.tex}
-\input{tables/component_summary_short.tex}
+\section*{Tablas complementarias}
+\input{tables/table_lens_sensitivity.tex}
 \end{landscape}
 \end{document}
